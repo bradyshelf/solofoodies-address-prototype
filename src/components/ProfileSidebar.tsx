@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { 
   User, 
@@ -7,60 +8,30 @@ import {
   Bell, 
   LogOut
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import RestaurantSwitcher from './RestaurantSwitcher';
-import AddRestaurantDialog from './AddRestaurantDialog';
-import PlanSelectionDialog from './PlanSelectionDialog';
-import { useRestaurants } from '@/contexts/RestaurantContext';
 
 interface ProfileSidebarProps {
   onClose: () => void;
 }
 
 const ProfileSidebar = ({ onClose }: ProfileSidebarProps) => {
-  const { signOut, userRole } = useAuth();
   const navigate = useNavigate();
-  const [isAddRestaurantOpen, setIsAddRestaurantOpen] = useState(false);
-  const [planSelectionDialogOpen, setPlanSelectionDialogOpen] = useState(false);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<{ id: number; name: string } | null>(null);
-  const { restaurants } = useRestaurants();
 
-  const handleSignOut = async () => {
-    await signOut();
+  const handleProfileClick = () => {
+    navigate('/profile');
+    onClose();
+  };
+
+  const handleBackToHome = () => {
     navigate('/');
+    onClose();
   };
 
-  const handleAddRestaurant = () => {
-    setIsAddRestaurantOpen(true);
-  };
-
-  const handleRestaurantAdded = (restaurant: any) => {
-    console.log('New restaurant added:', restaurant);
-    // In a real app, this would update the restaurant list in state management
-  };
-
-  const handleReactivate = (restaurantId: number) => {
-    const restaurant = restaurants.find(r => r.id === restaurantId);
-    if (restaurant) {
-      setSelectedRestaurant({ id: restaurantId, name: restaurant.name });
-      setPlanSelectionDialogOpen(true);
-    }
-  };
-
-  const handleClosePlanSelectionDialog = () => {
-    setPlanSelectionDialogOpen(false);
-    setSelectedRestaurant(null);
-  };
-
-  const allMenuItems = [
+  const menuItems = [
     {
       title: "Mi perfil",
       icon: User,
-      onClick: () => {
-        navigate('/profile');
-        onClose();
-      }
+      onClick: handleProfileClick
     },
     {
       title: "Colaboraciones",
@@ -90,40 +61,31 @@ const ProfileSidebar = ({ onClose }: ProfileSidebarProps) => {
       title: "Suscripción",
       icon: Bell,
       onClick: () => {
-        navigate('/subscription-management');
+        console.log("Navigate to subscription");
         onClose();
-      },
-      showForRoles: ['restaurant'] // Only show for restaurant users
+      }
     }
   ];
-
-  // Filter menu items based on user role
-  const menuItems = allMenuItems.filter(item => {
-    if (item.showForRoles) {
-      return item.showForRoles.includes(userRole || '');
-    }
-    return true; // Show items without role restrictions for all users
-  });
 
   const policyItems = [
     {
       title: "Políticas de privacidad",
       onClick: () => {
-        navigate('/privacy-policy');
+        console.log("Navigate to privacy policy");
         onClose();
       }
     },
     {
       title: "Condiciones de uso y contratación",
       onClick: () => {
-        navigate('/terms-of-service');
+        console.log("Navigate to terms of service");
         onClose();
       }
     },
     {
       title: "Política de cookies",
       onClick: () => {
-        navigate('/cookie-policy');
+        console.log("Navigate to cookie policy");
         onClose();
       }
     }
@@ -131,26 +93,22 @@ const ProfileSidebar = ({ onClose }: ProfileSidebarProps) => {
 
   return (
     <div className="w-full h-full bg-white flex flex-col">
-      {/* Header with Restaurant Switcher */}
-      {userRole === 'restaurant' ? (
-        <RestaurantSwitcher onAddRestaurant={handleAddRestaurant} onReactivate={handleReactivate} />
-      ) : (
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden">
-              <img
-                src="/lovable-uploads/26ce4d51-7cef-481d-8b86-af6c758c3760.png"
-                alt="Profile"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">Pollos Hermanos</h3>
-              <p className="text-sm text-gray-500">@usuarioinstagram</p>
-            </div>
+      {/* Header */}
+      <div className="p-6 border-b border-gray-200">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden">
+            <img
+              src="/lovable-uploads/26ce4d51-7cef-481d-8b86-af6c758c3760.png"
+              alt="Profile"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-900">Lisa Burger</h3>
+            <p className="text-sm text-gray-500">@lisaburger</p>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Menu Items */}
       <div className="flex-1 px-4 py-4">
@@ -194,30 +152,16 @@ const ProfileSidebar = ({ onClose }: ProfileSidebarProps) => {
         </div>
       </div>
 
-      {/* Footer - Sign Out */}
+      {/* Footer - Back to Home */}
       <div className="p-4 border-t border-gray-200">
         <button
-          onClick={handleSignOut}
+          onClick={handleBackToHome}
           className="w-full flex items-center px-3 py-3 text-left hover:bg-red-50 rounded-lg transition-colors text-red-600"
         >
           <LogOut className="w-5 h-5 mr-3" />
-          <span className="text-base">Cerrar sesión</span>
+          <span className="text-base">Volver al inicio</span>
         </button>
       </div>
-
-      {/* Add Restaurant Dialog */}
-      <AddRestaurantDialog
-        isOpen={isAddRestaurantOpen}
-        onClose={() => setIsAddRestaurantOpen(false)}
-        onAdd={handleRestaurantAdded}
-      />
-
-      {/* Plan Selection Dialog for Reactivation */}
-      <PlanSelectionDialog
-        isOpen={planSelectionDialogOpen}
-        onClose={handleClosePlanSelectionDialog}
-        restaurantName={selectedRestaurant?.name || ''}
-      />
     </div>
   );
 };

@@ -1,15 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Edit, Plus, MapPin, Phone, Globe, Trash2 } from 'lucide-react';
+import { ArrowLeft, Edit, Plus, MapPin, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface RestaurantProfile {
@@ -37,23 +35,32 @@ interface Location {
 }
 
 const ProfilePage = () => {
-  const { user, userRole } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<RestaurantProfile>({
-    restaurant_name: '',
-    description: '',
-    address: '',
-    city: '',
-    state: '',
-    zip_code: '',
-    phone: '',
-    website_url: '',
-    cuisine_type: ''
+    restaurant_name: 'Lisa Burger',
+    description: 'Delicious burgers and amazing atmosphere in the heart of Madrid',
+    address: 'Calle Mesón de Paredes 5',
+    city: 'Madrid',
+    state: 'Madrid',
+    zip_code: '28012',
+    phone: '+34 912 345 678',
+    website_url: 'https://lisaburger.es',
+    cuisine_type: 'Burger Restaurant'
   });
-  const [locations, setLocations] = useState<Location[]>([]);
+  const [locations, setLocations] = useState<Location[]>([
+    {
+      id: '1',
+      name: 'Malasaña',
+      address: 'Calle Mesón de Paredes 5',
+      city: 'Madrid',
+      state: 'Madrid',
+      zip_code: '28012',
+      phone: '+34 912 345 678',
+      contact_person: 'María García'
+    }
+  ]);
   const [showAddLocation, setShowAddLocation] = useState(false);
   const [newLocation, setNewLocation] = useState<Omit<Location, 'id'>>({
     name: '',
@@ -65,67 +72,12 @@ const ProfilePage = () => {
     contact_person: ''
   });
 
-  useEffect(() => {
-    if (user && userRole === 'restaurant') {
-      fetchProfile();
-    }
-  }, [user, userRole]);
-
-  const fetchProfile = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('restaurant_profiles')
-        .select('*')
-        .eq('user_id', user?.id)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-        return;
-      }
-
-      if (data) {
-        setProfile(data);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSave = async () => {
-    try {
-      const { error } = await supabase
-        .from('restaurant_profiles')
-        .upsert({
-          ...profile,
-          user_id: user?.id,
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to save profile",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      toast({
-        title: "Success",
-        description: "Profile saved successfully"
-      });
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive"
-      });
-    }
+  const handleSave = () => {
+    toast({
+      title: "Success",
+      description: "Profile saved successfully"
+    });
+    setIsEditing(false);
   };
 
   const handleAddLocation = () => {
@@ -151,21 +103,8 @@ const ProfilePage = () => {
   };
 
   const handleBackClick = () => {
-    // Navigate back to dashboard and trigger profile sidebar open
-    navigate('/dashboard');
-    // Use a small delay to ensure the navigation completes before triggering the sidebar
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('openProfileSidebar'));
-    }, 100);
+    navigate('/');
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -215,12 +154,12 @@ const ProfilePage = () => {
                         placeholder="Nombre del restaurante"
                       />
                     ) : (
-                      <p className="font-medium">{profile.restaurant_name || 'Nombre del restaurante'}</p>
+                      <p className="font-medium">{profile.restaurant_name}</p>
                     )}
                   </div>
                   <div>
                     <Label className="text-sm text-gray-600">Nombre de usuario</Label>
-                    <p className="text-gray-500">@{profile.restaurant_name?.toLowerCase().replace(/\s+/g, '') || 'usuario'}</p>
+                    <p className="text-gray-500">@{profile.restaurant_name?.toLowerCase().replace(/\s+/g, '')}</p>
                   </div>
                 </div>
               </div>
@@ -241,7 +180,7 @@ const ProfilePage = () => {
                   rows={3}
                 />
               ) : (
-                <p className="text-gray-900">{profile.description || 'Describe tu restaurante...'}</p>
+                <p className="text-gray-900">{profile.description}</p>
               )}
             </div>
             
@@ -254,7 +193,7 @@ const ProfilePage = () => {
                   placeholder="Número de teléfono"
                 />
               ) : (
-                <p className="text-gray-900">{profile.phone || 'Número de teléfono'}</p>
+                <p className="text-gray-900">{profile.phone}</p>
               )}
             </div>
 
@@ -415,20 +354,6 @@ const ProfilePage = () => {
             <div>
               <Label className="text-sm text-gray-600">Código postal</Label>
               <p className="text-gray-900">28012</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Billing Section */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <div>
-                <Label className="text-sm text-gray-600">Opciones de seguridad</Label>
-                <Button variant="outline" className="w-full mt-2">
-                  Cambiar plan
-                </Button>
-              </div>
             </div>
           </CardContent>
         </Card>
