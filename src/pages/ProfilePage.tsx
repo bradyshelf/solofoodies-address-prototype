@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Edit, Plus, MapPin, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -29,10 +30,30 @@ interface Location {
   address: string;
   city: string;
   state: string;
+  country: string;
   zip_code: string;
   phone: string;
   contact_person: string;
 }
+
+const locationData = {
+  "España": {
+    "Madrid": ["Madrid", "Alcalá de Henares", "Fuenlabrada", "Leganés", "Alcorcón"],
+    "Barcelona": ["Barcelona", "Hospitalet de Llobregat", "Badalona", "Terrassa", "Sabadell"],
+    "Valencia": ["Valencia", "Gandía", "Torrent", "Sagunto", "Alzira"],
+    "Andalucía": ["Sevilla", "Málaga", "Córdoba", "Granada", "Jerez de la Frontera"]
+  },
+  "Francia": {
+    "Île-de-France": ["París", "Boulogne-Billancourt", "Saint-Denis", "Argenteuil", "Montreuil"],
+    "Provenza-Alpes-Costa Azul": ["Marsella", "Niza", "Toulon", "Aix-en-Provence", "Avignon"],
+    "Ródano-Alpes": ["Lyon", "Grenoble", "Saint-Étienne", "Villeurbanne", "Chambéry"]
+  },
+  "Italia": {
+    "Lombardía": ["Milán", "Brescia", "Bergamo", "Monza", "Como"],
+    "Lacio": ["Roma", "Latina", "Guidonia Montecelio", "Fiumicino", "Aprilia"],
+    "Campania": ["Nápoles", "Salerno", "Giugliano in Campania", "Torre del Greco", "Pozzuoli"]
+  }
+};
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -56,6 +77,7 @@ const ProfilePage = () => {
       address: 'Calle Mesón de Paredes 5',
       city: 'Madrid',
       state: 'Madrid',
+      country: 'España',
       zip_code: '28012',
       phone: '+34 912 345 678',
       contact_person: 'María García'
@@ -67,10 +89,38 @@ const ProfilePage = () => {
     address: '',
     city: '',
     state: '',
+    country: '',
     zip_code: '',
     phone: '',
     contact_person: ''
   });
+  const [selectedCountry, setSelectedCountry] = useState<string>('');
+
+  const getAvailableProvinces = (country: string) => {
+    return country ? Object.keys(locationData[country as keyof typeof locationData] || {}) : [];
+  };
+
+  const getAvailableCities = (country: string, province: string) => {
+    return country && province ? locationData[country as keyof typeof locationData]?.[province] || [] : [];
+  };
+
+  const handleCountryChange = (country: string) => {
+    setSelectedCountry(country);
+    setNewLocation({
+      ...newLocation,
+      country,
+      state: '',
+      city: ''
+    });
+  };
+
+  const handleProvinceChange = (province: string) => {
+    setNewLocation({
+      ...newLocation,
+      state: province,
+      city: ''
+    });
+  };
 
   const handleSave = () => {
     toast({
@@ -91,10 +141,12 @@ const ProfilePage = () => {
       address: '',
       city: '',
       state: '',
+      country: '',
       zip_code: '',
       phone: '',
       contact_person: ''
     });
+    setSelectedCountry('');
     setShowAddLocation(false);
   };
 
@@ -251,6 +303,59 @@ const ProfilePage = () => {
                 <h3 className="font-medium text-blue-700 mb-4">Nueva ubicación</h3>
                 <div className="space-y-3">
                   <div>
+                    <Label>País *</Label>
+                    <Select value={newLocation.country} onValueChange={handleCountryChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un país" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.keys(locationData).map((country) => (
+                          <SelectItem key={country} value={country}>
+                            {country}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Provincia *</Label>
+                    <Select 
+                      value={newLocation.state} 
+                      onValueChange={handleProvinceChange}
+                      disabled={!newLocation.country}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona una provincia" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getAvailableProvinces(newLocation.country).map((province) => (
+                          <SelectItem key={province} value={province}>
+                            {province}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Ciudad *</Label>
+                    <Select 
+                      value={newLocation.city} 
+                      onValueChange={(city) => setNewLocation({...newLocation, city})}
+                      disabled={!newLocation.state}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona una ciudad" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getAvailableCities(newLocation.country, newLocation.state).map((city) => (
+                          <SelectItem key={city} value={city}>
+                            {city}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
                     <Label>Ubicación *</Label>
                     <Input
                       value={newLocation.name}
@@ -264,31 +369,6 @@ const ProfilePage = () => {
                       value={newLocation.address}
                       onChange={(e) => setNewLocation({...newLocation, address: e.target.value})}
                       placeholder="Ej. Calle Mayor, 15"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label>Ciudad *</Label>
-                      <Input
-                        value={newLocation.city}
-                        onChange={(e) => setNewLocation({...newLocation, city: e.target.value})}
-                        placeholder="Ej. Madrid"
-                      />
-                    </div>
-                    <div>
-                      <Label>Provincia *</Label>
-                      <Input
-                        value={newLocation.state}
-                        onChange={(e) => setNewLocation({...newLocation, state: e.target.value})}
-                        placeholder="Ej. Salamanca"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label>País *</Label>
-                    <Input
-                      value="España"
-                      disabled
                     />
                   </div>
                   <div>
