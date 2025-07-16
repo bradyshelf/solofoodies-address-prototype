@@ -9,7 +9,6 @@ import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, Edit, Plus, MapPin, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface RestaurantProfile {
   id?: string;
@@ -33,19 +32,7 @@ interface Location {
   zip_code: string;
   phone: string;
   contact_person: string;
-  country: string;
 }
-
-// Location data for cascading dropdowns
-const countryData = {
-  'España': {
-    'Madrid': ['Madrid', 'Alcalá de Henares', 'Leganés', 'Fuenlabrada', 'Alcorcón'],
-    'Barcelona': ['Barcelona', 'Hospitalet de Llobregat', 'Badalona', 'Terrassa', 'Sabadell'],
-    'Valencia': ['Valencia', 'Alicante', 'Elche', 'Castellón de la Plana', 'Torrent'],
-    'Andalucía': ['Sevilla', 'Málaga', 'Córdoba', 'Granada', 'Jerez de la Frontera'],
-    'Galicia': ['A Coruña', 'Vigo', 'Ourense', 'Lugo', 'Santiago de Compostela']
-  }
-};
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -71,8 +58,7 @@ const ProfilePage = () => {
       state: 'Madrid',
       zip_code: '28012',
       phone: '+34 912 345 678',
-      contact_person: 'María García',
-      country: 'España'
+      contact_person: 'María García'
     }
   ]);
   const [showAddLocation, setShowAddLocation] = useState(false);
@@ -83,8 +69,7 @@ const ProfilePage = () => {
     state: '',
     zip_code: '',
     phone: '',
-    contact_person: '',
-    country: ''
+    contact_person: ''
   });
 
   const handleSave = () => {
@@ -108,8 +93,7 @@ const ProfilePage = () => {
       state: '',
       zip_code: '',
       phone: '',
-      contact_person: '',
-      country: ''
+      contact_person: ''
     });
     setShowAddLocation(false);
   };
@@ -282,77 +266,30 @@ const ProfilePage = () => {
                       placeholder="Ej. Calle Mayor, 15"
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Ciudad *</Label>
+                      <Input
+                        value={newLocation.city}
+                        onChange={(e) => setNewLocation({...newLocation, city: e.target.value})}
+                        placeholder="Ej. Madrid"
+                      />
+                    </div>
+                    <div>
+                      <Label>Provincia *</Label>
+                      <Input
+                        value={newLocation.state}
+                        onChange={(e) => setNewLocation({...newLocation, state: e.target.value})}
+                        placeholder="Ej. Salamanca"
+                      />
+                    </div>
+                  </div>
                   <div>
                     <Label>País *</Label>
-                    <Select
-                      value={newLocation.country}
-                      onValueChange={(value) => setNewLocation({
-                        ...newLocation,
-                        country: value,
-                        state: '',
-                        city: ''
-                      })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecciona un país" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.keys(countryData).map((country) => (
-                          <SelectItem key={country} value={country}>
-                            {country}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Provincia *</Label>
-                    <Select
-                      value={newLocation.state}
-                      onValueChange={(value) => setNewLocation({
-                        ...newLocation,
-                        state: value,
-                        city: ''
-                      })}
-                      disabled={!newLocation.country}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecciona una provincia" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {newLocation.country && countryData[newLocation.country as keyof typeof countryData] && 
-                          Object.keys(countryData[newLocation.country as keyof typeof countryData]).map((state) => (
-                            <SelectItem key={state} value={state}>
-                              {state}
-                            </SelectItem>
-                          ))
-                        }
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Ciudad *</Label>
-                    <Select
-                      value={newLocation.city}
-                      onValueChange={(value) => setNewLocation({
-                        ...newLocation,
-                        city: value
-                      })}
-                      disabled={!newLocation.state}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecciona una ciudad" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {newLocation.country && newLocation.state && 
-                          countryData[newLocation.country as keyof typeof countryData]?.[newLocation.state]?.map((city) => (
-                            <SelectItem key={city} value={city}>
-                              {city}
-                            </SelectItem>
-                          ))
-                        }
-                      </SelectContent>
-                    </Select>
+                    <Input
+                      value="España"
+                      disabled
+                    />
                   </div>
                   <div>
                     <Label>Persona de contacto *</Label>
